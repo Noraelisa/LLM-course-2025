@@ -1,4 +1,8 @@
 # Retrieval Augmented Generation (RAG)
+
+## Lab Answers for week 5
+- Updated the file: 00_simple_local_rag.ipynb
+
 This week is focusing on practical introduction of a RAG concept: Retrieval Augmented Generation.
 
 There are two main building blocks that you will work with:
