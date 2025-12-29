@@ -1,5 +1,8 @@
 # Using LLMs and Prompting-based approaches
 
+## Lab Answers for week 2
+- Updated the files: gemini_prompting.ipynb and in-context-learning.ipynb
+
 ## Lecture
 
 Slides can be found here: [Week 2 Slides](https://github.com/Helsinki-NLP/LLM-course-2025/blob/main/week-2/LLM-Course%20Lecture%202.pdf).
