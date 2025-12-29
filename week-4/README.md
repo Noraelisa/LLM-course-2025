@@ -1,5 +1,8 @@
 # Fine-tuning LLMs
 
+## Lab Answers for week 4
+- Updated file: supervised_finetuning.ipynb
+
 **Lecture slides:** [LLM-Course Lecture 4](https://github.com/Helsinki-NLP/LLM-course-2025/blob/main/week-4/LLM-Course%20Lecture%204.pdf) 
 
 ## Lab Exercise
