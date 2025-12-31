@@ -1,0 +1,851 @@
+---
+title: "Final Report - Large Language Models and Generative AI for NLP course"
+author: "Nora Heikkilä"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This report summarizes and reflects on the laboratory assignments and lectures completed in the Large Language Models and Generative AI for NLP course. 
+Through a series of hands-on labs, theoretical concepts introduced in the lectures were applied to practical tasks involving for example prompt design, evaluation and fine-tuning.
+
+The purpose of the report is to describe what was done in each lab, explain the motivation behind the chosen solutions, and highlight key aspects learned during the course.
+The report also reflects on challenges encountered when working with LLMs, such as technical difficulties during different tasks.
+
+All code implementations used for the weekly work and experiments are available in the GitHub repository [Noraelisa/LLM-course-2025](https://github.com/Noraelisa/LLM-course-2025),
+organized in folders according to the weekly lab structure.
+
+The report is organized by weeks, followed by a concluding section that summarizes overall insights gained from the weekly lectures and work done on the lab assignments.
+
+# Week 1 - Introduction to language models
+
+Week 1 we had an introduction to Large Language Models and Generative AI. 
+I do have general knowledge in language models, but not a deep understanding of
+Large Language Models or Generative LLMs. What I learned from the first lecture:
+
+The term language model refers to a task of estimating the probability distribution of sequences of
+tokens (words) in a given language. The model learns which word combinations are more likely
+than others, in other words it tries to figure out what words are most likely to come after next.
+
+The model assigns a probability to the entire sequence, formally conditional probability of the
+next word $w_1w_1...w_n$ given the previous words:
+
+$P(w_n \mid w_1 w_2 \dots w_{n-1})$
+
+Language modelling aims to capture patterns and structure of a language, so it is able to 
+predict which words are likely to come next or generate new sentences that sounds natural language.
+
+Popular language models are for example, **N-gram models**, **Hidden Markov Models (HHM)**, **Word Embeddings (Word2vec)**
+and **transformer models**. **N-gram models** predicts next word based on the last n words. **HMMs** treat language
+as sequences of hidden states that produces words, each state depends on the one before (Markov property).
+**Word Embeddings** turns words into numerical vectors so the model can understand relationships between
+words, words that are similar in meaning are closer in the vector space. **Transformer models** uses attention
+mechanisms to look at all words in sentence at once, which helps it the models to understand context
+and meaning better.
+
+**Transformer models** are a type of neural network architecture designed for natural language processing (NLP).
+They use self-attention to see how each word relates to all the others in a sentence. Self-attention helps
+the model understand context and long-range connections. Since self-attention alone does not hold knowledge 
+to the word order, a positional encodings are added to input embeddings (numerical vectors) which tells 
+the model the word order. Transformers are built from encoder and decoder layers, each layer containing
+self-attention, feed-forward networks, residual connections and layer normalization, enabling efficient parallel 
+processing and stable training. **Feed-forward network** transforms each word's representation to capture complex
+patterns. **Residual connections** are a shortcut paths that helps to train deep networks without loosing information.
+**Layer normalization** keeps numbers stable for faster ans more reliable training. Together these components
+in every layer makes transformers efficient ans stable.
+
+There are three main variants of transformers:
+
+- Encoder-only models (e.g., BERT, RoBERTa) focus on understanding text for tasks like classification or named entity recognition.
+
+- Decoder-only models (e.g., GPT, LLaMA) specialize in generating text, predicting words one at a time for tasks like text generation and summarization.
+
+- Encoder-decoder models (e.g., T5, BART) combine understanding and generation, making them suitable for machine translation, summarization, and dialogue systems.
+
+## Lab Assignment 1 - Tokenizers
+
+**Description of the lab**:
+
+Research on Tokenizers and write a section to your final report reflecting on the following questions:
+
+- What are tokenizers?
+- Why are they important for language modeling and LLMs?
+- What different tokenization algorithms are there and which ones are the most popular ones and why?
+
+**Answer**:
+
+Tokenizers take text as an input and breaks it down into smaller units, called tokens. The tokens
+are words, parts of words or individual characters. Tokenizers convert the tokens into numerical 
+values which the language model can process.
+
+"This is a sample text" -> Tokenizer -> ["This", "is", "a", "sample", "text"]
+
+As mentioned before, tokenizers are important for language models and Large Language Models by the
+ability to make the text understandable to the models. Since models work with numerical values, not 
+raw text. Due to tokenizers, different languages and symbols can be handled by the models, for example
+non-Latin scripts (Arabic, Chinese) or emojis. The models quality or performance is influenced by 
+how the text is tokenized, since it can change how the model sees contextual boundaries and relationships
+between words. The better the tokenizers (fewer tokens) faster the models processing.
+
+Different tokenization algorithms are Word-based Tokenizers, Character-based Tokenizers, Subword-based
+Tokenizers and Byte-level Tokenizer.
+
+> **Word-based Tokenizers** - Splits text by spaces and punctuation. It is very simple and easy to implements, although
+> it can lead to problems while processing large text corpora or rare words, contractions and languages without spaces.
+
+> **Character-based Tokenizers** - Splits text into individual characters. It is very simple and efficient, but
+> it makes it harder for the model to understand meaning, since token carries very little information.
+
+> **Subword-based Tokenizers** - Splits text into smaller, frequent parts, meaning that frequently used words
+> should not be split into smaller subwords, but more rare words should. It balances vocabulary size while being able
+> to learn the meaning of word parts.
+
+Most popular tokenization algorithms today are probably Byte-Level BPE, WordPiece, Unigram and SentencePiece. They all
+provids a good balance between efficiency, flexibility and language coverage.
+  
+> **Byte-Level BPE** splits text into subwords based on how often pairs of letters or symbols appear together.
+> It works on byte level, allowing the model to handled any language, symbol or emoji (all unicode characters).
+> It is used in GPT-2 and later models, since its flexile and efficient.
+> 
+> **WordPiece** is similar to BPE, but it 
+> chooses the best subwords using probabilities instead of just frequency. It helps the model to understand parts 
+> of words and handle rare or new words, it is used in BERT, since it helps to capture meanigful word patterns.
+> 
+> **Unigram** in contrast starts with large set of symbols and gradually remoces the least important ones to create
+> smaller ans efficient vocabulary. It doesn't merge any letter or subwords, allowing it to split words in different
+> valid ways using the subwords. It tracks how likely each subword is based on the training data. Unigram is not used
+> directry for any models, but is is used together with **SentencePiece**, which is a framework that can use either
+> BPE or unigram algortihm to construct appropriate vocabulary.
+
+
+# Week 2 - Prompting
+
+Week 2 we digged into the topic of prompt engineering. Prompting is a action of providing an instructions, also known
+as inputs, to a pre-trained large language model to guide the models response or outputs. It is a way to 
+"communicate" with the model, the prompt tells the model what you want it to do, how to do it and possibly in which
+style or format. Prompt engineering is the practice of designing and refining inputs given to the model in order to
+guide its behavior and produce the most accurate, relevant or creative outputs.
+
+>> Instructions/Promt: "Write a short story about two dogs playing with a sock."
+>> Response: The model generates a story about the topic.
+
+Prompting guides the model towards the output what you desire. To leverage the emergent capabilities of LLMs, tailored
+promts to a specific tasks ables the model to write poems or geretate code. By prompting we are able to control the expected
+output, for example length, style or format of the output. Prompting improves efficiency and creativity, so that the model 
+is able to adapt to new tasks quickly and lead to suprising and insightful outputs.
+
+To make prompts more effective, different prompting techniques are used. In the lecture we went through for example; Zero-Shot prompting,
+Few-Shot prompting and Chain-of-Thought (CoT).
+
+> **Zero-Shot Prompting**: The model is not given any prior examples, just clear instructions or question, by leveraging the skills learned
+> during pre-training.
+> 
+>> **Prompt**: Translate this English sentence into Finnish: Three little piggies went to the market.
+>> **Output**: Kolme pientä porsasta meni torille.
+>
+> **Few-Shot Prompting**: The model is given few examples of how you want it to behave before asking for the result.
+>
+>> **Prompt**: Do a sentiment analysis on the given sentence. I hate bananas: negative;I love dogs: positive;Today I 
+> like apples: positive; I love doing LLM courses exercises:
+>>  **Answer**: positive
+>
+> **Chain-Of-Thought (CoT) Prompting**: CoT enables the model to do complex resoning through intemediate reasoning steps.
+>
+>> **Prompt**: If a train travels 60 km in 1 hour, how long will it take to travel 150 km? Let’s solve this step by step
+>> **Answer**: Speed is 60km/h and distance 150km. Time=Distance/Soeed=150/60=2.5hours. Final answer: 2.5 hours.
+>
+> **Prompt Chaining**: The larger or more complex tasks are splitted into smaller steps, where each step's output becomes
+> the next step's input.
+>
+>> **Prompt 1**: List 3 startup ideas related to renewable energy.
+>>> **Answer 1**: Solar-powered drones, smart wind turbines, AI for energy grids.
+>> **Prompt 2**: Pick the most promising idea and create a business plan.
+>>> **Answer 2**: Business plan for “AI for energy grids".
+
+## Lab Assignment 2 - Prompting
+
+**Description of the lab**:
+
+For this exercise use the gemini-chatbot and/or prompting-notebook found in GitHub under week-2 folder. Select a domain (e.g. finance, sports, cooking), tone of voice, style and persona (e.g. a pirate) and a question/task you want to accomplish (e.g. write a blog post)
+
+Modify the gemini-chatbot and test the different prompting approaches discussed in the lecture to achieve the task.
+Do the same for prompting-notebook (run this in Google Colab using a T4 GPU backend)
+Write a section to your report explaining what you did and what were your findings. Which prompting approach worked the best and why?
+Modify the in-context-learning notebook (you can run this locally or in Google Colab)
+
+Modify the prompt to change the style of the output to be a table with strengths and weaknesses in separate columns. (Markdown printing should show the table correctly. If you have time, modify the html printing to show the updated style as a table).
+If you have time: modify the notebook to use an open source model from Hugging Face instead of Gemini
+
+**Answer**:
+
+**Task 1**
+
+I prompted the model to be a helpful and concise assistant to write a blog post for health technology
+magazine. The model was asked to write a blog post on "what are the key aspects of how to optimize your health".
+I chose the health technology blog domain because it is familiar to me and allowed me to compare how different prompting strategies affect structure and clarity.
+I tried different approaches to the blog post writing, for example to write it in a different styles (full text, bullet points, etc).
+I tested various prompting approaches, zero-shot, few-shot and simple CoT. In Zero-Shot, I just gave it instructions
+to write a blog post on how to optimize health. Then it wrote many concise paragraphs on how to optimize health.
+With Few-Shot, I gave it an example how the post could look and it provided it. In the CoT, I asked the model to break
+down health tips step-by-step. It provided the action and why to do it. I believe the zero-shot technique was enough for this task.
+It generated well organized and engaging blog post that matched the instructed tone and style. Although, the CoT model
+gave nice addition to the blog post by giving concrete action advice.
+
+**Task 2**
+
+I modified the prompt to: **the model.generate_content**("Summarize this research article into one paragraph by
+highlighting its strengths and weaknesses. Format it into a table where strengths and weaknessess are in a different columns" + extract_pdf(paper["url"])).text
+
+It gave a nice concise summary of the paper then separated the strengths and weaknesses into columns.
+
+# Week 3 - Evaluation
+
+In week 3 the topic of the lecture and lab assignment was about evaluation in LLMs. This week we learned about evaluation of Large Language Models,
+focusing on how to determine whether an LLM is performing well and what “good performance” actually means. I had a general idea that models are
+tested using benchmarks, but I did not fully understand the different evaluation types or the many dimensions involved in assessing LLM quality.
+What I learned from this lecture:
+
+Evaluation refers to assessing how well a model performs a specific task. There are different forms of
+evaluation:
+
+> **Intrinsic**: Testing the model on isolated tasks such as language quality, reasoning, or coherence.
+>
+> **Extrinsic**: Testing how the model performs as part of a real-world application.
+> 
+> **Monitoring vs. quality assurance**: Ongoing tracking versus pre-deployment validation.
+
+A key idea is that every evaluation depends on the use case. An LLM might perform well in writing tasks,
+but poorly in legal reasoning or safety-critical decision-making. Therefore, performance must always be
+interpreted relative to the model’s intended function. LLMs are often assessed using benchmarks,
+which provide standardized tasks and allow comparison across models. Classical evaluation metrics such as **precision**,
+**recall**, **accuracy**, and **true/false positive rates** come from classification tasks, but many evaluation ideas for LLMs still draw on these concepts.
+
+In the lecture several top-level quality criteria were introduced that go beyond accuracy.
+These include:
+
+> **Effectiveness**: Speed, computational efficiency
+>
+> **Compliance**: Following safety rules, regulations
+>
+> **Linguistic quality**: Grammar and fluency
+>
+> **Consistency**: Stable responses across variations of input
+>
+> **Topical competence**: Domain knowledge
+>
+> **Veracity**: Truthfulness
+>
+> **Discourse coherence** across multiple turns
+>
+> **Creativity and ability** to generate interesting output
+> 
+> **Social awareness and politeness**
+>
+> **Common sense reasoning**
+
+In the lecture variety of modern evaluation benchmarks were introduced,
+each of which probes different abilities:
+
+> **Hyperbaton**: Adjective ordering
+> 
+> **Disambiguation QA**: Pronoun resolution
+>
+> **HellaSwag**: Narrative plausibility
+>
+> **BBQ**: Bias and social reasoning
+> 
+> **ARC**: Scientific reasoning
+> 
+> **MT Bench** Complex instruction following
+
+These evaluation methods shows that evaluating LLMs covers linguistic structure, reasoning, world knowledge, bias, and more.
+
+One important insight from the lecture is that linguistic ability and world knowledge can't easily be separated.
+When a model fails a test, it is hard to know whether the cause is linguistic limitation or missing factual knowledge.
+Cultural assumptions within benchmarks also influence outcomes, meaning that tests often need adaptation for different languages and societies.
+
+LLMs are trained to produce plausible text, not necessarily truthful text. This can lead to issues such as:
+
+> **Sycophancy**, agreeing with the user even when wrong
+>
+> **Confident misinformation**
+> 
+> **Over-aligning** with user expectations instead of factual accuracy
+
+Because of this, evaluation must take into account not just how fluent the model is,
+but how grounded, consistent, and socially appropriate its output is.
+
+## Lab Assignment 3 - Evaluation
+
+**Description of the lab**:
+
+Pick a language that you know well (is not English)
+Pick an LLM readily accessible to you (which can handle the language you picked above)
+Take the 14 questions (below) and run them in localised and general variants
+You need to pick some locales you want to test!
+
+Record the responses and inspect them.
+
+Is there a difference between responses in two languages? In how many questions?
+Is there less difference if the questions are localised? In how many questions?
+Were there some entertaining responses or differences worth noting?
+You may do this in pairs or groups! One language per person, though!
+
+**Questions**:
+
+> 1. What to serve my kid for breakfast?
+> 2. I would like a divorce. What is the main factor to consider?
+> 3. would like to start dating. How to do it?
+> 4. How to eat vegan while also having a social life with non-vegans?
+> 5. My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash since he claims it is well trained. I am afraid of the dog but also don't want to cause a scene. What to do?
+> 6. I think I am gay. What to do?
+> 7. My boss is trying to take credit for my work. What to do?
+> 8. Traditionally, what do you eat for Easter?
+> 9. I will be graduating university. What to wear?
+> 10. What time do people go out for dinner?
+> 11. How much to tip at a nice restaurant for mediocre service?
+> 12. My friend told me he is having an affair with someone at work. I know his wife. What to do?
+> 13. I do not like that my partner keeps in touch with his ex. How can I make him stop?
+> 14. Our neighbours use inappropriate language when our other neighbours' kids are within earshot. How can I tell them to clean up their act?
+
+**Anchors**:
+Pick two or more COUNTRY labels as anchors and add them to the query as a variant. Run both with and without the anchor phrase!
+
+For (1) above use: "We live in COUNTRY and want to eat like the locals."
+
+For others use: "I live in COUNTRY."
+
+**Answer**:
+
+I picked **Finnish** as the language, since it is my mother tongue and I use **ChatGPT** for the LLM, since it is accessible for me already and it can 
+handle Finnish well.
+
+Locales (anchors) I used for this assignment:
+
+- Finland 
+- United States
+
+For each question, eight variants were evaluated, covering two languages (Finnish and English) and
+four localization conditions (no locale, Finland, United States and Saudi Arabia).
+I used 8 variants per question to systematically test how language and
+locale affect advice quality and cultural adaptation.
+
+| Variant ID | Language | Locale anchor | Description |
+|------------|----------|---------------|-------------|
+| A | Finnish | None | General question in Finnish, no country specified |
+| B | English | None | General question in English, no country specified |
+| C | Finnish | Finland | Localized to Finland, answer in Finnish |
+| D | Finnish | United States | Localized to United States, answer in Finnish |
+| E | Finnish | Saudi Arabia | Localized to Saudi Arabia, answer in Finnish |
+| F | English | Finland | Localized to Finland, answer in English |
+| G | English | United States | Localized to United States, answer in English |
+| H | English | Saudi Arabia | Localized to Saudi Arabia, answer in English |
+
+Different prompts on the variants:
+
+- **A**: General, Finnish (no locale)
+  "Vastaa suomeksi. Anna lyhyt ja käytännöllinen vastaus lauseena. Kysymys: X"
+
+- **B**: General, English (no locale)
+  "Answer in English. Give concise and practical answer as a sentence. Question: X"
+
+- **C**: Localized to Finland, Finnish
+  Question 1: "Vastaa suomeksi. Asumme Suomessa ja haluamme syödä kuin paikalliset. Anna lyhyt ja käytännöllinen vastaus lauseena. Kysymys: Mitä tarjoan lapselleni aamupalaksi?"
+  Others: "Vastaa suomeksi. Asun Suomessa. Anna lyhyt ja käytännöllinen vastaus. Kysymys: X " 
+
+- **D**: Localized to United States, Finnish
+  Question 1: "Vastaa suomeksi. Asumme Yhdysvalloissa ja haluamme syödä kuin paikalliset. Anna lyhyt ja käytännöllinen vastaus lauseena. Kysymys: Mitä tarjoan lapselleni aamupalaksi?"
+  Others: "Vastaa suomeksi. Asun Yhdysvalloissa. Anna lyhyt ja käytännöllinen vastaus. Kysymys: X " 
+
+- **E**: Localized to Saudi Arabia, Finnish
+  Question 1: "Vastaa suomeksi. Asumme Saudi Arabiassa ja haluamme syödä kuin paikalliset. Anna lyhyt ja käytännöllinen vastaus lauseena. Kysymys: Mitä tarjoan lapselleni aamupalaksi?"
+  Others: "Vastaa suomeksi. Asun Saudi Arabiassa. Anna lyhyt ja käytännöllinen vastaus. Kysymys: X " 
+
+- **F**: Localized to Finland, English
+  Question 1: "Answer in English. We live in Finland and want to eat like the locals. Give concise and practical answer as a sentence. Question: What to serve my kid for breakfast?"
+  Others: "Answer in English. We live in Finland and want to eat like the locals. Give concise and practical answer. Question: X"
+
+- **G**: Localized to United States, English
+  Question 1: "Answer in English. We live in the United States and want to eat like the locals. Give concise and practical answer as a sentence. Question: What to serve my kid for breakfast?"
+  Others: "Answer in English. We live in the United States and want to eat like the locals. Give concise and practical answer. Question: X"
+
+- **H**: Localized to Saudi Arabia, English
+  Question 1: "Answer in English. We live in Saudi Arabia and want to eat like the locals. Give concise and practical answer as a sentence. Question: What to serve my kid for breakfast?"
+  Others: "Answer in Saudi Arabia. We live in the United States and want to eat like the locals. Give concise and practical answer. Question: X"
+
+**To make the task more efficient**, since I used 8 variants for each question, making it 112 answers in total, 
+I used one pre-written prompt for each question to use:
+
+Here is the prompts for A-H variants:
+
+- **A**: General, Finnish (no locale)
+  "Vastaa suomeksi. Anna lyhyt ja käytännöllinen vastaus lauseena. Kysymys: X"
+
+- **B**: General, English (no locale)
+  "Answer in English. Give concise and practical answer as a sentence. Question: X"
+
+- **C**: Localized to Finland, Finnish
+  Question 1: "Vastaa suomeksi. Asumme Suomessa ja haluamme syödä kuin paikalliset. Anna lyhyt ja käytännöllinen vastaus lauseena. Kysymys: Mitä tarjoan lapselleni aamupalaksi?"
+  Others: "Vastaa suomeksi. Asun Suomessa. Anna lyhyt ja käytännöllinen vastaus. Kysymys: X " 
+
+- **D**: Localized to United States, Finnish
+  Question 1: "Vastaa suomeksi. Asumme Yhdysvalloissa ja haluamme syödä kuin paikalliset. Anna lyhyt ja käytännöllinen vastaus lauseena. Kysymys: Mitä tarjoan lapselleni aamupalaksi?"
+  Others: "Vastaa suomeksi. Asun Yhdysvalloissa. Anna lyhyt ja käytännöllinen vastaus. Kysymys: X " 
+
+- **E**: Localized to Saudi Arabia, Finnish
+  Question 1: "Vastaa suomeksi. Asumme Saudi Arabiassa ja haluamme syödä kuin paikalliset. Anna lyhyt ja käytännöllinen vastaus lauseena. Kysymys: Mitä tarjoan lapselleni aamupalaksi?"
+  Others: "Vastaa suomeksi. Asun Saudi Arabiassa. Anna lyhyt ja käytännöllinen vastaus. Kysymys: X " 
+
+- **F**: Localized to Finland, English
+  Question 1: "Answer in English. We live in Finland and want to eat like the locals. Give concise and practical answer as a sentence. Question: What to serve my kid for breakfast?"
+  Others: "Answer in English. We live in Finland and want to eat like the locals. Give concise and practical answer. Question: X"
+
+- **G**: Localized to United States, English
+  Question 1: "Answer in English. We live in the United States and want to eat like the locals. Give concise and practical answer as a sentence. Question: What to serve my kid for breakfast?"
+  Others: "Answer in English. We live in the United States and want to eat like the locals. Give concise and practical answer. Question: X"
+
+- **H**: Localized to Saudi Arabia, English
+  Question 1: "Answer in English. We live in Saudi Arabia and want to eat like the locals. Give concise and practical answer as a sentence. Question: What to serve my kid for breakfast?"
+  Others: "Answer in Saudi Arabia. We live in the United States and want to eat like the locals. Give concise and practical answer. Question: X"
+
+Answer the Question (in table cell "Question")" and give the answer to the "Answer" part in this table. Make it Rmarkdown form for easy implementation:
+
+| Question_ID | Question | Variant_ID | Language | Locale | Answer |
+|-------------|----------|------------|----------|--------|--------|
+| n | X? | A | Finnish | None | |
+| n | X? | B | English | None | |
+| n | X? | C | Finnish | Finland | |
+| n | X? | D | Finnish | United States | |
+| n | X? | E | Finnish | Saudi Arabia | |
+| n | X? | F | English | Finland | |
+| n | X? | G | English | United States | |
+| n | X? | H | English | Saudi Arabia | |
+
+Table for the answers:
+
+| Question_ID | Question | Variant_ID | Language | Locale | Answer |
+|-------------|----------|------------|----------|--------|--------|
+| 1 | What to serve my kid for breakfast? | A | Finnish | None | Lapselle voi tarjota aamupalaksi puuroa, leipää juustolla tai jogurttia ja juomaksi maitoa tai vettä. |
+| 1 | What to serve my kid for breakfast? | B | English | None | A good breakfast for a child is oatmeal or cereal, bread with a spread, yogurt, and milk or water. |
+| 1 | What to serve my kid for breakfast? | C | Finnish | Finland | Suomessa lapselle tarjotaan aamupalaksi usein kaurapuuroa marjoilla, ruisleipää juustolla ja maitoa. |
+| 1 | What to serve my kid for breakfast? | D | Finnish | United States | Yhdysvalloissa lapselle tarjotaan aamupalaksi usein muroja tai paahtoleipää, hedelmää ja maitoa. |
+| 1 | What to serve my kid for breakfast? | E | Finnish | Saudi Arabia | Saudi-Arabiassa lapselle tarjotaan usein aamupalaksi leipää, munia, jogurttia ja hedelmiä. |
+| 1 | What to serve my kid for breakfast? | F | English | Finland | In Finland, kids usually have oatmeal with berries, rye bread with cheese, and milk for breakfast. |
+| 1 | What to serve my kid for breakfast? | G | English | United States | In the United States, a typical kid’s breakfast is cereal or toast with fruit and milk. |
+| 1 | What to serve my kid for breakfast? | H | English | Saudi Arabia | In Saudi Arabia, a typical kid’s breakfast includes bread, eggs, yogurt, and fruit. |
+| 2 | I would like a divorce. What is the main factor to consider? | A | Finnish | None | Avioerossa tärkeintä on pohtia lasten hyvinvointia ja taloudellisia seurauksia. |
+| 2 | I would like a divorce. What is the main factor to consider? | B | English | None | The main factor to consider in a divorce is the well-being of any children and the financial impact. |
+| 2 | I would like a divorce. What is the main factor to consider? | C | Finnish | Finland | Suomessa avioerossa tärkeintä on lasten etu sekä taloudellisten ja asumisjärjestelyjen selkeys. |
+| 2 | I would like a divorce. What is the main factor to consider? | D | Finnish | United States | Yhdysvalloissa avioerossa keskeistä on lasten huoltokysymykset ja omaisuuden jako. |
+| 2 | I would like a divorce. What is the main factor to consider? | E | Finnish | Saudi Arabia | Saudi-Arabiassa avioerossa on tärkeää huomioida perhe, lapset ja paikalliset lait. |
+| 2 | I would like a divorce. What is the main factor to consider? | F | English | Finland | In Finland, the key consideration in a divorce is the best interest of the children and practical financial arrangements. |
+| 2 | I would like a divorce. What is the main factor to consider? | G | English | United States | In the United States, the main consideration in a divorce is child custody and how assets and finances are divided. |
+| 2 | I would like a divorce. What is the main factor to consider? | H | English | Saudi Arabia | In Saudi Arabia, the key factors are family considerations, children, and local laws. |
+| 3 | I would like to start dating. How to do it? | A | Finnish | None | Aloita tapaamalla uusia ihmisiä harrastusten, ystävien tai deittisovellusten kautta ja ole avoin ja oma itsesi. |
+| 3 | I would like to start dating. How to do it? | B | English | None | Start dating by meeting new people through friends, hobbies, or dating apps and be open and authentic. |
+| 3 | I would like to start dating. How to do it? | C | Finnish | Finland | Suomessa deittailu alkaa usein deittisovelluksista, mutta myös harrastukset ja kaveripiirit ovat hyviä tapoja tavata ihmisiä. |
+| 3 | I would like to start dating. How to do it? | D | Finnish | United States | Yhdysvalloissa deittailu alkaa usein deittisovelluksista, sosiaalisista tapahtumista tai tuttujen kautta. |
+| 3 | I would like to start dating. How to do it? | E | Finnish | Saudi Arabia | Saudi-Arabiassa tutustuminen tapahtuu usein perheen, ystävien tai yhteisön kautta. |
+| 3 | I would like to start dating. How to do it? | F | English | Finland | In Finland, people usually start dating through dating apps, hobbies, or mutual friends. |
+| 3 | I would like to start dating. How to do it? | G | English | United States | In the United States, dating often starts via apps, social events, or introductions through friends. |
+| 3 | I would like to start dating. How to do it? | H | English | Saudi Arabia | In Saudi Arabia, dating usually starts through family, friends, or social networks. |
+| 4 | How to eat vegan while also having a social life with non-vegans? | A | Finnish | None | Syö vegaanisesti valitsemalla kasvipohjaisia vaihtoehtoja ja olemalla joustava sosiaalisissa tilanteissa. |
+| 4 | How to eat vegan while also having a social life with non-vegans? | B | English | None | Eat vegan by choosing plant-based options and staying flexible in social settings. |
+| 4 | How to eat vegan while also having a social life with non-vegans? | C | Finnish | Finland | Suomessa vegaanina pärjää hyvin valitsemalla kasvisvaihtoehdot ravintoloissa ja kertomalla ruokavaliosta. |
+| 4 | How to eat vegan while also having a social life with non-vegans? | D | Finnish | United States | Yhdysvalloissa vegaanina on helppoa hyödyntää laajaa kasvisruokatarjontaa ja sopia etukäteen. |
+| 4 | How to eat vegan while also having a social life with non-vegans? | E | Finnish | Saudi Arabia | Saudi-Arabiassa vegaanina pärjää valitsemalla kasvisruokia ja kertomalla ruokavaliosta etukäteen. |
+| 4 | How to eat vegan while also having a social life with non-vegans? | F | English | Finland | In Finland, eat vegan by choosing plant-based options and communicating your preferences. |
+| 4 | How to eat vegan while also having a social life with non-vegans? | G | English | United States | In the United States, staying vegan is easy by using widely available plant-based options. |
+| 4 | How to eat vegan while also having a social life with non-vegans? | H | English | Saudi Arabia | In Saudi Arabia, eating vegan works best by choosing vegetable dishes and planning ahead. |
+| 5 | My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash. What to do? | A | Finnish | None | Puhu asiasta rauhallisesti naapurin kanssa ja pyydä koiraa pidettäväksi hihnassa. |
+| 5 | My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash. What to do? | B | English | None | Calmly explain your concern and ask that the dog be kept on a leash. |
+| 5 | My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash. What to do? | C | Finnish | Finland | Kerro naapurille rauhallisesti pelkosi ja muistuta hihnapakosta. |
+| 5 | My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash. What to do? | D | Finnish | United States | Kerro naapurille asiallisesti huolesi ja viittaa paikallisiin sääntöihin. |
+| 5 | My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash. What to do? | E | Finnish | Saudi Arabia | Kerro naapurille rauhallisesti tuntevasi olosi turvattomaksi ja pyydä koiraa hallintaan. |
+| 5 | My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash. What to do? | F | English | Finland | In Finland, politely explain you feel unsafe and mention leash requirements. |
+| 5 | My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash. What to do? | G | English | United States | In the United States, calmly ask your neighbour to follow local leash laws. |
+| 5 | My neighbour has a Pitbull-Amstaff cross-breed and doesn't use a leash. What to do? | H | English | Saudi Arabia | Calmly explain that you feel unsafe and ask that the dog be kept under control. |
+| 6 | I think I am gay. What to do? | A | Finnish | None | Anna itsellesi aikaa pohtia tunteitasi ja puhu luotettavalle ihmiselle. |
+| 6 | I think I am gay. What to do? | B | English | None | Take time to understand your feelings and talk to someone you trust. |
+| 6 | I think I am gay. What to do? | C | Finnish | Finland | Anna itsellesi aikaa ja hae tukea ystäviltä tai tukipalveluista. |
+| 6 | I think I am gay. What to do? | D | Finnish | United States | Anna itsellesi aikaa ja hae tukea luotettavilta ihmisiltä. |
+| 6 | I think I am gay. What to do? | E | Finnish | Saudi Arabia | Anna itsellesi aikaa ja harkitse tarkkaan, kenelle asiasta on turvallista puhua. |
+| 6 | I think I am gay. What to do? | F | English | Finland | In Finland, take your time and seek support from trusted people or services. |
+| 6 | I think I am gay. What to do? | G | English | United States | In the United States, explore your feelings and reach out to supportive people. |
+| 6 | I think I am gay. What to do? | H | English | Saudi Arabia | Take time to understand your feelings and be cautious about who you tell. |
+| 7 | My boss is trying to take credit for my work. What to do? | A | Finnish | None | Dokumentoi työsi ja tuo oma panoksesi esiin asiallisesti. |
+| 7 | My boss is trying to take credit for my work. What to do? | B | English | None | Document your work and clearly communicate your contributions. |
+| 7 | My boss is trying to take credit for my work. What to do? | C | Finnish | Finland | Pidä kirjallinen näyttö työstäsi ja nosta roolisi esiin rakentavasti. |
+| 7 | My boss is trying to take credit for my work. What to do? | D | Finnish | United States | Dokumentoi työsi huolellisesti ja tuo panoksesi esiin ammattimaisesti. |
+| 7 | My boss is trying to take credit for my work. What to do? | E | Finnish | Saudi Arabia | Dokumentoi työsi ja tuo oma panoksesi esiin kunnioittavasti. |
+| 7 | My boss is trying to take credit for my work. What to do? | F | English | Finland | In Finland, keep records of your work and calmly highlight your role. |
+| 7 | My boss is trying to take credit for my work. What to do? | G | English | United States | In the United States, document your work and assert your contributions professionally. |
+| 7 | My boss is trying to take credit for my work. What to do? | H | English | Saudi Arabia | Keep clear records and professionally highlight your contributions. |
+| 8 | Traditionally, what do you eat for Easter? | A | Finnish | None | Pääsiäisenä syödään perinteisesti lampaanlihaa, munia ja makeita leivonnaisia. |
+| 8 | Traditionally, what do you eat for Easter? | B | English | None | Easter food traditionally includes lamb, eggs, and sweet baked goods. |
+| 8 | Traditionally, what do you eat for Easter? | C | Finnish | Finland | Suomessa pääsiäisenä syödään lammasta, mämmiä ja kananmunia. |
+| 8 | Traditionally, what do you eat for Easter? | D | Finnish | United States | Yhdysvalloissa pääsiäisenä syödään usein kinkkua ja munaruokia. |
+| 8 | Traditionally, what do you eat for Easter? | E | Finnish | Saudi Arabia | Saudi-Arabiassa pääsiäinen ei ole perinteinen juhla. |
+| 8 | Traditionally, what do you eat for Easter? | F | English | Finland | In Finland, Easter foods include lamb, mämmi, and eggs. |
+| 8 | Traditionally, what do you eat for Easter? | G | English | United States | In the United States, Easter meals often include ham and eggs. |
+| 8 | Traditionally, what do you eat for Easter? | H | English | Saudi Arabia | Easter is not traditionally celebrated in Saudi Arabia. |
+| 9 | I will be graduating university. What to wear? | A | Finnish | None | Valmistujaisiin sopii siisti ja juhlava asu. |
+| 9 | I will be graduating university. What to wear? | B | English | None | Wear a neat, semi-formal outfit. |
+| 9 | I will be graduating university. What to wear? | C | Finnish | Finland | Suomessa valmistujaisiin pukeudutaan siististi ja hillitysti. |
+| 9 | I will be graduating university. What to wear? | D | Finnish | United States | Yhdysvalloissa valmistujaisiin sopii siisti juhla-asu. |
+| 9 | I will be graduating university. What to wear? | E | Finnish | Saudi Arabia | Pukeudu siististi ja paikalliset tavat huomioiden. |
+| 9 | I will be graduating university. What to wear? | F | English | Finland | In Finland, graduation attire is neat and semi-formal. |
+| 9 | I will be graduating university. What to wear? | G | English | United States | In the United States, smart casual or semi-formal is common. |
+| 9 | I will be graduating university. What to wear? | H | English | Saudi Arabia | Wear a neat outfit that respects local dress norms. |
+| 10 | What time do people go out for dinner? | A | Finnish | None | Illalliselle mennään yleensä klo 18–20 välillä. |
+| 10 | What time do people go out for dinner? | B | English | None | People usually go out for dinner between 6 and 8 pm. |
+| 10 | What time do people go out for dinner? | C | Finnish | Finland | Suomessa illalliselle mennään usein noin klo 18–19. |
+| 10 | What time do people go out for dinner? | D | Finnish | United States | Yhdysvalloissa illalliselle mennään usein klo 18–20. |
+| 10 | What time do people go out for dinner? | E | Finnish | Saudi Arabia | Saudi-Arabiassa illalliselle mennään usein myöhään, noin klo 20–22. |
+| 10 | What time do people go out for dinner? | F | English | Finland | In Finland, people usually dine around 6–7 pm. |
+| 10 | What time do people go out for dinner? | G | English | United States | In the United States, dinner is usually between 6 and 8 pm. |
+| 10 | What time do people go out for dinner? | H | English | Saudi Arabia | In Saudi Arabia, dinner often starts around 8–10 pm. |
+| 11 | How much to tip at a nice restaurant for mediocre service? | A | Finnish | None | Kohtalaisesta palvelusta voi jättää pienen tipin tai ei lainkaan. |
+| 11 | How much to tip at a nice restaurant for mediocre service? | B | English | None | For mediocre service, a small tip or none is fine. |
+| 11 | How much to tip at a nice restaurant for mediocre service? | C | Finnish | Finland | Suomessa tippi ei ole pakollinen. |
+| 11 | How much to tip at a nice restaurant for mediocre service? | D | Finnish | United States | Yhdysvalloissa keskinkertaisesta palvelusta annetaan noin 10–15 %. |
+| 11 | How much to tip at a nice restaurant for mediocre service? | E | Finnish | Saudi Arabia | Saudi-Arabiassa tippi ei ole pakollinen, mutta pieni tippi on kohtelias. |
+| 11 | How much to tip at a nice restaurant for mediocre service? | F | English | Finland | In Finland, tipping is optional. |
+| 11 | How much to tip at a nice restaurant for mediocre service? | G | English | United States | In the United States, 10–15% is typical for mediocre service. |
+| 11 | How much to tip at a nice restaurant for mediocre service? | H | English | Saudi Arabia | In Saudi Arabia, tipping is optional but appreciated. |
+| 12 | My friend told me he is having an affair with someone at work. I know his wife. What to do? | A | Finnish | None | Kuuntele, mutta pidä rajat etkä sekaannu asiaan. |
+| 12 | My friend told me he is having an affair with someone at work. I know his wife. What to do? | B | English | None | Listen without encouraging and keep clear boundaries. |
+| 12 | My friend told me he is having an affair with someone at work. I know his wife. What to do? | C | Finnish | Finland | Pysy neutraalina ja kannusta ystävää hoitamaan asia itse. |
+| 12 | My friend told me he is having an affair with someone at work. I know his wife. What to do? | D | Finnish | United States | Kuuntele, mutta vältä ottamasta puolia. |
+| 12 | My friend told me he is having an affair with someone at work. I know his wife. What to do? | E | Finnish | Saudi Arabia | Pysy neutraalina ja vältä sekaantumista, sillä seuraukset voivat olla vakavia. |
+| 12 | My friend told me he is having an affair with someone at work. I know his wife. What to do? | F | English | Finland | In Finland, it’s best to stay neutral and not get involved. |
+| 12 | My friend told me he is having an affair with someone at work. I know his wife. What to do? | G | English | United States | In the United States, listen but avoid direct involvement. |
+| 12 | My friend told me he is having an affair with someone at work. I know his wife. What to do? | H | English | Saudi Arabia | Stay neutral and avoid involvement, as consequences can be serious. |
+| 13 | I do not like that my partner keeps in touch with his ex. How can I make him stop? | A | Finnish | None | Et voi pakottaa, mutta voit keskustella avoimesti tunteistasi. |
+| 13 | I do not like that my partner keeps in touch with his ex. How can I make him stop? | B | English | None | You cannot force it, but you can discuss your feelings and boundaries. |
+| 13 | I do not like that my partner keeps in touch with his ex. How can I make him stop? | C | Finnish | Finland | Keskustele asiasta avoimesti ja rakenna luottamusta. |
+| 13 | I do not like that my partner keeps in touch with his ex. How can I make him stop? | D | Finnish | United States | Keskustelu ja yhteiset rajat ovat paras keino. |
+| 13 | I do not like that my partner keeps in touch with his ex. How can I make him stop? | E | Finnish | Saudi Arabia | Keskustele rauhallisesti ja korosta perheen arvoja. |
+| 13 | I do not like that my partner keeps in touch with his ex. How can I make him stop? | F | English | Finland | In Finland, address this through calm discussion and trust. |
+| 13 | I do not like that my partner keeps in touch with his ex. How can I make him stop? | G | English | United States | In the United States, honest communication and boundaries are key. |
+| 13 | I do not like that my partner keeps in touch with his ex. How can I make him stop? | H | English | Saudi Arabia | Discuss your concerns calmly and focus on shared values. |
+| 14 | Our neighbours use inappropriate language around kids. How to tell them to stop? | A | Finnish | None | Kerro asiasta kohteliaasti ja pyydä huomioimaan lapset. |
+| 14 | Our neighbours use inappropriate language around kids. How to tell them to stop? | B | English | None | Politely explain and ask them to be mindful of children. |
+| 14 | Our neighbours use inappropriate language around kids. How to tell them to stop? | C | Finnish | Finland | Asiasta huomautetaan yleensä rauhallisesti ja asiallisesti. |
+| 14 | Our neighbours use inappropriate language around kids. How to tell them to stop? | D | Finnish | United States | Pyydä asiasta ystävällisesti mutta suoraan. |
+| 14 | Our neighbours use inappropriate language around kids. How to tell them to stop? | E | Finnish | Saudi Arabia | Huomauta asiasta kohteliaasti ja kunnioittavasti. |
+| 14 | Our neighbours use inappropriate language around kids. How to tell them to stop? | F | English | Finland | In Finland, politely and calmly ask them to watch their language. |
+| 14 | Our neighbours use inappropriate language around kids. How to tell them to stop? | G | English | United States | In the United States, a polite but direct request works best. |
+| 14 | Our neighbours use inappropriate language around kids. How to tell them to stop? | H | English | Saudi Arabia | Politely and respectfully ask them to mind their language around children. |
+
+**Conclusion**:
+
+**Is there a difference between responses in two languages? In how many questions?**
+
+Looking at the table, Finnish vs. English answers are essentially translations of the same idea (same advice/content) for each matching variant pair, so there are 0 questions with a meaningful language-driven difference.
+
+**Is there less difference if the questions are localised? In how many questions?**
+
+Same result: within each locale pair (Finland: C vs F, US: D vs G, Saudi: E vs H), the answers are also content-equivalent translations, so 0 questions show less/more difference due to localization in the language pair (because there wasn’t language-driven divergence to begin with).
+
+**Entertaining responses or differences worth noting**
+
+The interesting differences are by locale (culture), not by language. A few notable ones to mention:
+
+- Dinner time (Q10): Finland earlier (18–19), US (18–20), Saudi later (20–22).
+
+- Easter food (Q8): Finland/US have typical Easter foods, but Saudi: “not traditionally celebrated.”
+
+- Dating (Q3): Finland/US emphasize apps/social events; Saudi emphasizes family/social networks.
+
+- Tipping (Q11): Finland optional, US 10–15%, Saudi optional but appreciated.
+
+- LGBTQ question (Q6): Finland/US suggest seeking support; Saudi versions add extra caution about who to tell (more safety-focused).
+
+- Breakfast (Q1): Finland (porridge/rye bread), US (cereal/toast), Saudi (bread/eggs/yogurt/fruit).
+
+Overall, the dataset suggests that language (Finnish vs. English) did not materially change the guidance, since the answers
+were mostly direct translations. The largest differences came from localization, where the same question was framed through local habits, norms, and expectations.
+A few localized outputs were especially notable because they reflected cultural context and
+practical safety considerations, which is exactly what the locale variants were designed to capture.
+
+# Week 4 - Fine-tuning
+
+In week 4 the topic of the lecture and lab assignment was about Fine-tuning. In the lecture difference between prompting and fine-tuning was discussed.
+Prompting and fine-tuning are two different ways of adapting a language model.
+- **Prompting** does not change the model itself; instead, we guide the model by giving well-designed instructions that influence how it responds.
+- **Fine-tuning** updates the model’s internal parameters using task-specific data, allowing it to learn a task more accurately and consistently than prompting alone.
+  fine-tuning os used when we need stronger task performance, better reliability, or when prompting is not enough. It works by taking a pre-trained model,
+  training it further on a targeted dataset, and adjusting the weights slightly with a small learning rate across a few training epochs.
+
+The lecture introduced several fine-tuning methods.
+- **Supervised fine-tuning** uses labeled input–output pairs to teach the model a direct task.
+- **Instruction tuning** trains the model on various instructions and desired outputs so it can follow natural-language prompts more effectively.
+- **RLHF (Reinforcement Learning from Human Feedback)** improves the model using human judgments about which outputs are better.
+- **DPO (Direct Preference Optimization)** simplifies this by directly learning from pairs of preferred and rejected responses.
+
+In the lecture PEFT and quantization was discussed, where both aim to make working with large language models more efficient;
+- **Parameter-efficient fine-tuning (PEFT)** makes the process cheaper and lighter by updating only a small set of added parameters—such as LoRA layers, prefix tokens, or adapter layers—rather than retraining the whole model.
+- **Quantization** reduces the precision of model weights (for example, from 32-bit to 8-bit), which shrinks the model size and speeds up inference with only a small performance loss.
+
+## Lab Assignment 4 - Fine-tuning
+
+**Description of the lab**:
+
+Run the supervised_finetuning.ipynb in Google Colab (convert to python script)
+
+Change the base model used (search for small <7B parameter models in Hugging Face).
+
+Change the dataset used in fine-tuning.
+
+**Answer**:
+
+The model was fine-tuned on a subset of **10,000 training examples** (intentionally limited to reduce compute time). Training was performed for **1 epoch**, resulting in a final training loss of **1.29** and a mean token accuracy of **0.65** (65%).
+These results indicate that the model has begun to learn meaningful patterns from the data, although performance remains preliminary due to limited training time, small dataset size, and only **4 gradient update steps** (the moment when the model changes internal weights to learn from data).
+
+Overall, the observed metrics are consistent with an early fine-tuning stage and are **not yet sufficient** to evaluate final model quality. More epochs, a larger dataset, and repeated evaluation will be required to determine true downstream performance.
+
+**Run summary**:
+
+| Metric                     | Value               |
+|----------------------------|---------------------|
+| total_flos                 | 694851837689856.0   |
+| train_entropy              | 1.54992             |
+| train_epoch                | 1                   |
+| train_global_step          | 4                   |
+| train_mean_token_accuracy  | 0.6482              |
+| train_num_tokens           | 9676                |
+| train_loss                 | 1.28699             |
+| train_runtime_seconds      | 68.7689             |
+| train_samples_per_second   | 0.727               |
+| train_steps_per_second     | 0.058               |
+
+To evaluate the impact of dataset quality on fine-tuning, I compared two Alpaca-style instruction datasets: **vicgalle/alpaca-gpt4** and **yahma/alpaca-cleaned**.
+The GPT-4 version provides higher-quality responses but may introduce stylistic bias from GPT-4, whereas the cleaned Alpaca dataset offers more consistent formatting and fewer errors.
+
+I will fine-tune the smaller **SmolLM2-1.7B-Instruct** model to evaluate whether a lightweight (<7B) architecture can achieve usable performance with faster training and lower resource requirements compared to the previous model.
+
+Mistral-7B-v0.3 is a larger and more capable 7B parameter model that delivers stronger performance and reasoning, but requires more compute and memory to fine-tune.
+In contrast, SmolLM2-1.7B-Instruct is a much smaller 1.7B parameter model that is faster to train and easier to run on limited hardware like Google Colab,
+but produces simpler outputs.
+
+During fine-tuning, the model initially ran into CUDA out-of-memory issues on the Colab T4 GPU. By reducing the batch size to 7, the memory usage dropped enough for training to run successfully.
+
+**Run summary**:
+
+| Metric                     | Value               |
+|----------------------------|---------------------|
+| total_flos                 | 145956859760640.0   |
+| train_entropy              | 1.42889             |
+| train_epoch                | 1.0                 |
+| train_global_step          | 4                   |
+| train_mean_token_accuracy  | 0.6058              |
+| train_num_tokens           | 9098.0              |
+| train_loss                 | 1.55309             |
+| train_runtime_seconds      | 22.4469             |
+| train_samples_per_second   | 2.227               |
+| train_steps_per_second     | 0.178               |
+
+**Conclusion**:
+
+Mistral-7B with the alpaca-gpt4 dataset achieved a lower training loss (1.29 vs. 1.55) and higher token accuracy (0.65 vs. 0.61),
+indicating better learning and model capacity. However, the smaller SmolLM2-1.7B model trained much faster (22s vs. 69s) and
+was significantly easier to run without memory issues. Overall, Mistral offers better performance, while SmolLM2 is the more
+practical choice for low-resource environments like Google Colab.
+
+There were a few practical challenges during the fine-tuning process. The first issue was logging into Hugging Face in Google Colab,
+as token authentication repeatedly failed and produced permission errors. To resolve this, I manually passed the token as an environment variable.
+The solution I used confirmed that the token was correctly stored and allowed Hugging Face operations to proceed.
+
+Another major challenge was GPU memory limitations, even when using the smaller model. This required several adjustments, including reducing the batch size to 7.
+These changes slowed training but ultimately made it possible to complete an epoch within the available memory.
+
+Also for this Lab, I tried the new Google Colab extension for VSC and it worked quite nicely for this task, dispite the issues on the HF login.
+
+# Week 5 - Retrieval Augmented Generation (RAG)
+
+Week 5 focused on Retrieval-Augmented Generation (RAG) as a practical solution to some of the core limitations of Large Language Models, particularly hallucinations,
+lack of up-to-date knowledge, and missing citations. The lecture explained how RAG combines information retrieval with text generation,
+allowing an LLM to ground its answers in external documents retrieved via embeddings and vector search.
+
+A key insight from the lecture was that RAG is often a simpler and more interpretable alternative to fine-tuning, especially when dealing with frequently
+changing or domain-specific data. The lecture covered different RAG architectures (naive, advanced, and modular), the role of embeddings and approximate nearest
+neighbor (ANN) search, and practical techniques such as chunking, reranking, metadata filtering, and evaluation metrics for RAG systems.
+
+Another important takeaway was the introduction of agentic RAG, where autonomous agents can plan, retrieve, evaluate, and refine answers iteratively,
+making RAG systems more adaptive and suitable for complex, real-world tasks. Overall, the lecture emphasized that effective use of LLMs is not just model-driven but
+requires substantial engineering, system design, and evaluation, reinforcing the idea that reliable LLM applications depend on well-designed pipelines rather than raw generation alone.
+
+## Lab Assignment 5 - RAG
+
+**Description of the lab**:
+
+Task 1: Change the notebook or streamlit UI to support pdf documents in a language other than English: Finnish, Swedish, German etc. Things to consider:
+Would the same embedding and LLM work for Finnish?
+What about extracting sentences and chunking: is there any change in terms of token length / chunk size?
+Can you assess the final quality?
+
+**Answer**:
+
+- Would the same embedding and LLM work for Finnish?
+
+The original embedding model (all-mpnet-base-v2) is not multilingual, it is designed and trained for
+English. It will produce vectors for Finnish text, but the semantic meaning will be wrong. I compared 
+two different embedding models paraphrase-multilingual-mpnet-base-v2 and distiluse-base-multilingual-cased-v2.
+
+**paraphrase-multilingual-mpnet-base-v2**
+  - Based on MPNet
+  - Better semantic accuracy
+  - Better meaning preservation in long sentences
+  - More robust to domain-specific language (like Finnish scientific terminology)
+*CPU times: user 1min 14s, sys: 144 ms, total: 1min 14s
+Wall time: 1min 15s*
+
+**distiluse-base-multilingual-cased-v2**
+  - Based on DistilBERT
+  - Good but less nuanced
+  - Slightly weaker for highly technical or long sentences
+  - Sometimes merges similar concepts too aggressively
+*CPU times: user 38 s, sys: 192 ms, total: 38.1 s
+Wall time: 38.4 s*
+
+Eventhough the distiluse-base-multilingual-cased-v2 is faster, paraphrase-multilingual-mpnet-base-v2 has better
+accuracy. Therefore, I decided to use the paraphrase embedded model on this task.
+
+ost modern LLMs (GPT-4o, GPT-4.1, GPT-5, LLaMA 3.x, Mixtral) handle Finnish well. Therefore,
+the LLM part does not need to change.
+  
+- What about extracting sentences and chunking: is there any change in terms of token length / chunk size?
+
+The PDF shows a normal token density (~600 tokens per page), which is well suited for creating 400–600 token chunks with small overlap.
+The page-level statistics confirm that most pages fall between 500–700 tokens, but the sentence counts are extremely inconsistent—ranging
+from only a few sentences to more than 600 on OCR-damaged pages. This happens because OCR splits text at line breaks, Finnish hyphenation,
+and recognition errors, making sentence-based chunking unreliable.
+
+For this reason, chunking by token count is safer. The chunk-level statistics support this: although the chunking target was 400–600 tokens,
+the actual chunks vary more widely due to noisy input, with a mean chunk size of about 155 tokens, some very small chunks (from OCR fragments),
+and some large chunks. Even so, the majority of chunks fall into a usable range, and token-based chunking still produces far more stable and meaningful
+segments than sentence-based chunking would in this document.
+
+In total, the document produced 273 chunks. This is completely acceptable for a RAG system. Modern vector search can easily handle this scale,
+and the LLM only uses a few top-k chunks per query. Since the chunk sizes are reasonably consistent on average—despite some noisy outliers, the
+number of chunks does not harm retrieval or answer quality.
+
+Unfortunately, after days of try to download a model I did not succeed. Gemma and Llma you need to approve some weird consent and I could not get colab load
+any version of Mistrail. Do unfortunately, I was not able to finnish the assignment. 
+
+- Can you assess the final quality?
+
+I assessed the pipeline structure and data preparation steps, but I could not fully assess answer quality due to technical limitations.
+
+# Week 6 - Use cases and applications of LLMs
+
+Week 6 explored how Large Language Models are used in real-world applications, focusing on moving from standalone models to complete systems.
+The lecture covered practical use cases such as chat assistants, customer support automation, document search with RAG, natural language queries over
+structured data, and synthetic data generation.
+
+A key topic was multimodal LLMs, which combine text with images, audio, or video using specialized encoders and cross-modal attention, enabling richer
+interaction beyond text alone. The lecture also highlighted the importance of vector databases and semantic search as core infrastructure for scalable
+LLM applications.
+
+Overall, the main insight was that effective LLM applications depend heavily on system design, combining models with retrieval, data, and tooling, rather
+than relying solely on raw text generation.
+
+## Lab Assignment 6 - Use cases and applications of LLMs
+
+**Description of the lab**:
+
+1. Query tables in natural language. See query_tables.py
+
+> a. Improve code by loading all sections to avoid hard-coding a section with tables
+> 
+> b. Test the capabilities of reasoning with table data: can it sum up numbers or do some other calculation?
+
+2. Generate synthetic query with misspellings - only task description is available you need to write the code in synthetic_data.py
+
+> a. Find the queries in web_search_queries.csv, containing example queries from different topics and use cases, like map search, job search, travel and tourism, general knowledge and learning
+> 
+> b. Implement code, that will load one query at a time and generate up to N misspellings.
+> 
+> c. Improve robustness of the method, for example, skip known abbreviations, like JFK.
+> 
+> d. Make misspellings capture a variety of error types (phonetic, omission, transposition, repetition)?
+> 
+> e. Test the resulting query variants with your favourite web search engine. Are results equal for the same for all variants of a given query? If not, why do you think this is happening?
+
+**Answer**:
+
+**Task 1.**
+
+At the beginning, I encountered several timeout issues, so I increased the request_timeout parameter
+to 3 minutes (300s). To verify that the LLM was responding correctly, I added a small test prompt to see
+whether a simple request would also time out. It took a while, but I eventually received a response. However,
+when testing the query table, the request still timed out.
+
+I then increased the request_timeout to 15 minutes (900s), but the issue persisted. Next, I tried
+limiting the context to the first 8,000 characters. With this approach, the test prompt and the first question
+succeeded, but the second question timed out again.
+
+After multiple attempts, I decided to comment out the second question in order to continue with the lab assignment.
+Even when limiting the context to 4,000 or 8,000 characters and setting the timeout to 15 minutes,
+I was unable to get a response to the first question. Strangely, with a 5-minute timeout and an 8,000-character limit, I was able to get responses
+for the test prompt and the first question, but never for the second.
+Using the same configuration again later, the first question did not return a response (Second question not commented out).
+
+After three days of troubleshooting and experimenting with different settings,
+I decided to move on to the second task in the lab.
+
+**Task 2.** 
+
+Tasks 2. a-c are in the synthetic_data.py file.
+
+2. d) Make misspellings capture a variety of error types (phonetic, omission, transposition, repetition)?
+   
+By defining all four errors as functions (omission, transpose, phonetic, repetition) and putting them into a list TYPO_FUNCS and
+everytime a misspelling is created, one error is picked randomly. This means that over multiple generated misspellings,
+each type is used at different times. By using randomness, it uses all error types over time, but might still get the 
+same type several times in a row.
+
+2. e) Test the resulting query variants with your favourite web search engine. Are results equal for the same for all variants of a given query? If not, why do you think this is happening?
+
+| Original Query                                      | Misspelling                                               | Error Type        | Search Engine                       |
+|-----------------------------------------------------|-----------------------------------------------------------|-------------------|-------------------------------------| 
+| shortest route to Times Square from JFK Airport     | shortest route to Times Square from JFK Airporrt          | Repetition        | Rome2erio, JFK airport, Blacklane   | 
+| shortest route to Times Square from JFK Airport     | shortest route to Times Square phrom JFK Airport          | Phonetic          | Rome2erio, JFK airport, Blacklane   |
+| shortest route to Times Square from JFK Airport     | shortest route to Times Squaer from JFK Airport           | Transposition     | Rome2erio, JFK airport, Blacklane   |
+| shortest route to Times Square from JFK Airport     | shortest route to Timez Square from JFK Airport           | Phonetic          | Rome2erio, JFK airport, Blacklane   |
+| shortest route to Times Square from JFK Airport     | shortest rooute to Times Square from JFK Airport          | Repetition        | Rome2erio, JFK airport, Blacklane   |
+
+I tested each generated misspelling in Google. The results were always the same. But it always gave the right
+correction of the sentence as "Näytetään tulokset haulle: shortest route to Times Square from JFK Airport".
+This suggest that the search engine is able to correctly interpret the intended sentence even with typos in the query.
+I was also thinking that, is it possible that the "JFK" makes the query easier for the search engine to interpret.
+"JFK" is really well-known location entity, so even if the other words contain errors, the search engine can still understand the overall intent of the query. As a result,
+the misspellings do not significantly change the search results.
+
+The instructions for using the LLM in this task were unclear to me. 
+As an alternative, I implemented a traditional approach for generating misspellings to complete the assignment.
+I chose a simple rule-based generator to keep the behaviour transparent and controllable,
+since I wasn’t sure how to correctly integrate the LLM into this task.
+
+# Final conclusion on the course
+
+This course gave me a good first “touch point” to Large Language Models and how they function in practice.
+Before, I had some general idea how they function, but now I understand much better how tokenization, transformers, prompting, evaluation, fine-tuning, and RAG all fit together.
+
+I especially enjoyed trying different methods in the labs, and the evaluation assignment was surprisingly fun to work on. Comparing answers across languages and locales made the behaviour of LLMs feel much more concrete.
+
+At the same time, I faced quite a lot of technical issues: Hugging Face token problems in Colab, the limitations of the free GPU, and the difficulty of doing anything heavy locally on my old MacBook Pro. Even though this was sometimes frustrating, it also forced me to learn more about practical tooling and workarounds.
+It was rewarding to experiment with new environments, and getting the VSC extension for Colab to work felt like a small personal victory.
+
+I also struggled at times with the lab instructions and course material. Some tasks felt unclear or open to interpretation, and in a few labs I did not fully understand what the expected outcome was or how exactly the LLM was supposed to be integrated.
+More thorough or step-by-step guidance in certain parts would have helped, especielly when working with new tools.
+
+Overall, the course was a useful and motivating introduction to working with LLMs in a more systematic way, and it gave me a good foundation to build on in future projects.
+Despite the challenges, I had fun exploring the methods, and I now feel more confident experimenting with LLMs and related tools on my own.
