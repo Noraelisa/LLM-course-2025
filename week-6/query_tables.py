@@ -17,7 +17,11 @@ from llama_index.core import Settings
 # This will expose the api link “http://localhost:5010/api/parseDocument?renderFormat=all” for you to utilize in your code.
 
 # Initialize LLm
-llm = Ollama(model="llama3", request_timeout=60.0)
+llm = Ollama(model="llama3", request_timeout=300.0) # Experienced timed out, change to 15 minutes
+
+# quick sanity test
+test_resp = llm.complete("Say hello in one short sentence.")
+print("Test LLM response:", test_resp.text)
 
 llmsherpa_api_url = "http://localhost:5010/api/parseDocument?renderFormat=all"
 pdf_url = "https://s206.q4cdn.com/479360582/files/doc_financials/2024/q1/2024q1-alphabet-earnings-release-pdf.pdf"
@@ -35,12 +39,14 @@ for section in doc.sections():
 
 # Convert the output in HTML format
 context = selected_section.to_html(include_children=True, recurse=True)
+
+context = context[:8000] # limit the context for first 8000 chars, because of timeout
 question = "What was Google's operating margin for 2024"
 resp = llm.complete(
     f"read this table and answer question: {question}:\n{context}")
 print(resp.text)
 
-question = "What % Net income is of the Revenues?"
+"""question = "What % Net income is of the Revenues?"
 resp = llm.complete(
     f"read this table and answer question: {question}:\n{context}")
-print(resp.text)
+print(resp.text)""" # commented the other question out, since the program would not run, since the timeout
