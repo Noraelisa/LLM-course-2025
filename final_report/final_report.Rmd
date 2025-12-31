@@ -18,7 +18,7 @@ Through a series of hands-on labs, theoretical concepts introduced in the lectur
 The purpose of the report is to describe what was done in each lab, explain the motivation behind the chosen solutions, and highlight key aspects learned during the course.
 The report also reflects on challenges encountered when working with LLMs, such as technical difficulties during different tasks.
 
-All code implementations used for the weekly work and experiments are available in the GitHub repository [Noraelisa/LLM-course-2025](https://github.com/Noraelisa/LLM-course-2025),
+All code implementations used for the weekly work and experiments are available in the GitHub repository Noraelisa/LLM-course-2025 (<https://github.com/Noraelisa/LLM-course-2025>), 
 organized in folders according to the weekly lab structure.
 
 The report is organized by weeks, followed by a concluding section that summarizes overall insights gained from the weekly lectures and work done on the lab assignments.
