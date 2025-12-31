@@ -1,5 +1,7 @@
 # Large Language Models and Generative AI for NLP
 
+## Link to the [Final Report](final_report/final_report.pdf)
+
 **THIS REPOSITORY WILL EVOLVE OVER THE DURATION OF THE COURSE. WE WILL ADD CONTENT AS WE GO.**
 
 
